@@ -1,4 +1,4 @@
-# Zhang Lab — pilot static site
+# Zhang Lab — webpage site
 
 Brain Disorders & Genomics, Tongji University School of Medicine.
 Plain HTML, CSS and JavaScript. No build step, no framework, no package install.
@@ -72,14 +72,7 @@ chips. Nothing else needs touching.
 ## Notes on the content
 
 Text was drafted from the departmental lab page and the Spliformer-V2 README.
-Two things to check before this goes live:
 
-- The **18-tissue list** on `tools.html` is a placeholder. Replace it with the
-  exact tissue names and `-T` codes from the repository.
-- The **Spliformer-V2 citation** links to the repo; point it at the preprint
-  or journal article once available.
-- Publication metrics (51 papers, 2,300+ citations, h-index 28) are as stated
-  on the departmental page and will need periodic updating.
 
 ## Design
 
