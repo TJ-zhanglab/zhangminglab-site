@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tools — Zhang Lab, Tongji University</title>
+<meta name="description" content="Spliformer, Spliformer-V2 and SpatialE: open source tools from the Zhang Lab for predicting RNA splicing and spatial gene set enrichment.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,SOFT,WONK@9..144,300..700,0..100,0..1&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+
+<header class="masthead">
+  <div class="wrap">
+    <a class="wordmark" href="index.html">Zhang Lab<span>Brain Disorders &amp; Genomics</span></a>
+    <nav class="nav" aria-label="Main">
+      <a href="index.html">Home</a>
+      <a href="research.html">Research</a>
+      <a href="ming-zhang.html">Ming Zhang</a>
+      <a href="publications.html">Publications</a>
+      <a href="tools.html">Tools</a>
+      <a href="contact.html">Join &amp; Contact</a>
+    </nav>
+  </div>
+</header>
+
+<main id="main">
+
+<section class="wrap">
+  <span class="eyebrow">Open source</span>
+  <h1 style="font-size:clamp(2rem,4.4vw,3.2rem); max-width:16ch">Tools for reading the code</h1>
+  <p class="lede" style="max-width:60ch">Three released tools, all free and open. Two predict what a genetic variant does to RNA splicing; one asks where in a tissue a gene set is concentrated. Spliformer and SpatialE also run in the browser, with no installation.</p>
+  <div class="btn-row">
+    <a class="btn" href="https://www.aibraingenomics.com/" rel="noopener">Web platform</a>
+    <a class="btn btn-ghost" href="https://github.com/TJ-zhanglab" rel="noopener">All code on GitHub</a>
+  </div>
+</section>
+
+<!-- ======================= TOOL INDEX ============================ -->
+<section class="wrap rule-top">
+  <div class="grid">
+    <article class="card">
+      <span class="card-num">Splicing &middot; Python</span>
+      <h3><a href="#spliformer">Spliformer</a></h3>
+      <p>Self-attention model that predicts splicing from pre-mRNA sequence and visualises the attention weight of splicing motifs. Sparse self-attention gives it a reported 8.7% performance gain over convolutional models and a 4.77-fold speed-up.</p>
+    </article>
+    <article class="card">
+      <span class="card-num">Splicing &middot; Python</span>
+      <h3><a href="#spliformer-v2">Spliformer-V2</a></h3>
+      <p>Segment-NT backbone fine-tuned on paired genome and transcriptome data, predicting splice site usage across 18 human tissues — twelve of them CNS, including spinal cord.</p>
+    </article>
+    <article class="card">
+      <span class="card-num">Spatial &middot; R</span>
+      <h3><a href="#spatiale">SpatialE</a></h3>
+      <p>Gene set spatial enrichment. Estimates an entropy-weighted differential expression matrix across spatial clusters and tests whether a predefined gene set concentrates in a region.</p>
+    </article>
+  </div>
+</section>
+
+<!-- ======================== SPLIFORMER =========================== -->
+<section class="wrap rule-top" id="spliformer">
+  <span class="eyebrow">TJ-zhanglab/Spliformer &middot; GPL-3.0</span>
+  <h2>Spliformer</h2>
+  <p style="max-width:62ch">A self-attention deep learning tool that predicts splicing from pre-mRNA sequence and visualises the attention weight score of splicing motifs. Give it a VCF and it returns, for each variant, the probability that a nearby position acts as a donor, an acceptor, or neither. In motif mode it produces attention heatmaps for wild-type and variant sequence side by side, which is how you see <em>why</em> the model changed its mind.</p>
+
+  <h3 style="margin-top:2.5rem">Install</h3>
+  <p>Tested on Debian 4.19.235-1 x86_64, Python 3.9.6, PyTorch 1.9.0 (GPU). Install PyTorch first, then:</p>
+<pre><code>conda create -n Spliformer python=3.9
+conda activate Spliformer
+git clone https://github.com/TJ-zhanglab/Spliformer.git
+cd Spliformer
+pip install -r requirements.txt
+python setup.py install</code></pre>
+  <p>A Dockerfile ships with the repository if you would rather not configure dependencies by hand — <code>docker build -t spliformer:v1 .</code> and mount your data directory with <code>-v $(pwd):/data</code>.</p>
+
+  <h3 style="margin-top:2.5rem">Two modes</h3>
+<pre><span class="c"># general — predict the effect of variants on splicing</span>
+<code>spliformer <span class="f">-T</span> general <span class="f">-I</span> ./examples/inputhg19.vcf <span class="f">-O</span> ./output.vcf \
+  <span class="f">-R</span> /path/genome.fa <span class="f">-A</span> ./reference/hg19anno.txt</code>
+
+<span class="c"># motif — attention heatmaps for wild-type vs variant sequence</span>
+<code>spliformer <span class="f">-T</span> motif <span class="f">-I</span> ./examples/inputhg19-motif.vcf \
+  <span class="f">-R</span> /path/genome.fa <span class="f">-A</span> ./reference/hg19anno.txt</code></pre>
+  <p class="muted" style="font-size:0.95rem">Run general mode first, then take the SNVs worth understanding into motif mode.</p>
+
+  <h3 style="margin-top:2.5rem">Parameters</h3>
+  <table>
+    <thead><tr><th style="width:6rem">Flag</th><th>Meaning</th></tr></thead>
+    <tbody>
+      <tr><td><code>-T</code></td><td><code>general</code> or <code>motif</code>. Default <code>general</code>.</td></tr>
+      <tr><td><code>-I</code></td><td>Input VCF with the variants of interest.</td></tr>
+      <tr><td><code>-O</code></td><td>Output VCF — general mode only.</td></tr>
+      <tr><td><code>-R</code></td><td>Reference genome FASTA, GRCh37/hg19 or GRCh38/hg38, downloaded and unzipped.</td></tr>
+      <tr><td><code>-A</code></td><td>Annotation file built from GENCODE v39; hg19 and hg38 versions ship in <code>reference/</code>.</td></tr>
+      <tr><td><code>-D</code></td><td>Optional. Distance window between variant and gained or lost splice site, 0–4999. Default 50.</td></tr>
+      <tr><td><code>-M</code></td><td>Optional. Mask annotated gains and unannotated losses — <code>0</code> off, <code>1</code> on. Default 0.</td></tr>
+      <tr><td><code>-N</code></td><td>Optional. Number of motifs in the attention heatmap, 0–40. Default 10.</td></tr>
+    </tbody>
+  </table>
+
+  <h3 style="margin-top:2.5rem">Reading the output</h3>
+  <p>The INFO field is <code>Ref&gt;Alt|gene|increased acceptor dist:score|decreased acceptor dist:score|increased donor dist:score|decreased donor dist:score</code>. For <code>chr2:179642185 G&gt;A</code>, the result <code>G&gt;A|TTN|2:0.00|38:0.01|2:0.83|-38:0.31</code> says the position 2&nbsp;bp downstream gains donor usage by 0.83, while a donor 38&nbsp;bp upstream loses 0.31 — a donor shift, not an acceptor one.</p>
+  <div class="btn-row">
+    <a class="btn btn-ghost" href="https://github.com/TJ-zhanglab/Spliformer" rel="noopener">Repository</a>
+    <a class="btn btn-ghost" href="https://www.aibraingenomics.com/spliformer/" rel="noopener">Run in browser</a>
+    <a class="btn btn-ghost" href="https://doi.org/10.1093/brain/awaf025" rel="noopener">Paper — Brain 2025</a>
+  </div>
+</section>
+
+<!-- ====================== SPLIFORMER-V2 ========================== -->
+<section class="wrap rule-top" id="spliformer-v2">
+  <span class="eyebrow">TJ-zhanglab/Spliformer-V2</span>
+  <h2>Spliformer-V2</h2>
+  <p style="max-width:62ch">Where Spliformer predicts splicing, Spliformer-V2 predicts <em>how much</em> — splice site usage rather than presence, and separately for each tissue. Built on the Segment-NT architecture and fine-tuned on paired genome and transcriptome datasets, it covers 18 human tissues, of which twelve are CNS. As far as we know that is the most complete splicing model available for human brain regions and spinal cord. It is genotype-aware and takes standard VCF in, annotated VCF out.</p>
+
+  <h3 style="margin-top:2.5rem">Coverage</h3>
+  <ul class="tissues" style="margin-top:1rem">
+    <li class="cns">Cortex</li><li class="cns">Frontal cortex</li><li class="cns">Anterior cingulate</li>
+    <li class="cns">Hippocampus</li><li class="cns">Amygdala</li><li class="cns">Hypothalamus</li>
+    <li class="cns">Caudate</li><li class="cns">Putamen</li><li class="cns">Nucleus accumbens</li>
+    <li class="cns">Substantia nigra</li><li class="cns">Cerebellum</li><li class="cns">Spinal cord</li>
+    <li>Non-CNS tissue &times; 6</li>
+  </ul>
+  <p class="muted" style="margin-top:1.25rem; font-size:0.9rem">Placeholder labels — replace with the exact tissue names and <code>-T</code> codes from the repository (for example <code>LMC</code>).</p>
+
+  <h3 style="margin-top:2.5rem">Install and run</h3>
+  <p>Tested on Debian 6.1.140-1 x86_64, Python 3.8.19, PyTorch 2.4.1 (GPU).</p>
+<pre><code>git clone https://github.com/TJ-zhanglab/Spliformer-V2.git
+cd Spliformer-V2
+conda env create -f spliformerV2.yml
+conda activate spliformerv2
+
+python run.py \
+  <span class="f">-I</span> ./example/input/input19.vcf \
+  <span class="f">-O</span> ./output/output.vcf \
+  <span class="f">-R</span> ./reference/hg19.fa \
+  <span class="f">-A</span> ./reference/grch37.txt \
+  <span class="f">-T</span> LMC \
+  <span class="f">-G</span> 1 \
+  <span class="f">-M</span> 0</code></pre>
+
+  <table>
+    <thead><tr><th style="width:6rem">Flag</th><th>Meaning</th></tr></thead>
+    <tbody>
+      <tr><td><code>-I</code> <code>-O</code></td><td>Input and output VCF.</td></tr>
+      <tr><td><code>-R</code></td><td>Reference genome FASTA, hg19 or hg38, unzipped into <code>reference/</code>.</td></tr>
+      <tr><td><code>-A</code></td><td>GENCODE v39 annotation; hg19 and hg38 versions ship in <code>reference/</code>.</td></tr>
+      <tr><td><code>-T</code></td><td>Tissue to predict for.</td></tr>
+      <tr><td><code>-G</code></td><td>Genotypes present in the VCF — <code>1</code> yes, <code>0</code> no.</td></tr>
+      <tr><td><code>-M</code></td><td>Optional. Mask annotated gains and unannotated losses. Default <code>0</code>.</td></tr>
+    </tbody>
+  </table>
+
+  <h3 style="margin-top:2.5rem">Reading the output</h3>
+  <p>Predictions land in the INFO field as a pipe-delimited string: alternate allele, gene, four usage scores — increased and decreased acceptor, increased and decreased donor — then four distances from the variant to the site carrying each maximum.</p>
+  <div class="btn-row">
+    <a class="btn btn-ghost" href="https://github.com/TJ-zhanglab/Spliformer-V2" rel="noopener">Repository</a>
+    <a class="btn btn-ghost" href="https://doi.org/10.1101/2025.06.28.662167" rel="noopener">Preprint — bioRxiv</a>
+  </div>
+</section>
+
+<!-- ========================== SPATIALE ============================ -->
+<section class="wrap rule-top" id="spatiale">
+  <span class="eyebrow">TJ-zhanglab/SpatialE &middot; GPL-3.0 &middot; R</span>
+  <h2>SpatialE</h2>
+  <p style="max-width:62ch">A gene set spatial enrichment tool. SpatialE estimates an entropy-weighted differential gene expression matrix across spatial clusters, then asks how significantly a predefined gene set concentrates in one region compared with randomly sampled gene sets. Combined with Seurat, it locates the region where a gene set or cell type is enriched. This is the method behind the <em>NOMO1</em> link to ALS reported in <em>Brain</em> in 2024.</p>
+
+  <h3 style="margin-top:2.5rem">Install</h3>
+<pre><code>install.packages("devtools")
+library(devtools)
+
+options(timeout = 9999999)  <span class="c"># the download is large</span>
+install_github("https://github.com/TJ-zhanglab/SpatialE.git")</code></pre>
+  <p>Built-in datasets ship with the package; the <code>User's guidance</code> directory in the repository walks through a worked example.</p>
+  <div class="btn-row">
+    <a class="btn btn-ghost" href="https://github.com/TJ-zhanglab/SpatialE" rel="noopener">Repository</a>
+    <a class="btn btn-ghost" href="https://www.aibraingenomics.com/spatiale/" rel="noopener">Run in browser</a>
+    <a class="btn btn-ghost" href="https://doi.org/10.1093/brain/awae123" rel="noopener">Paper — Brain 2024</a>
+  </div>
+</section>
+
+<!-- ======================== IN PROGRESS =========================== -->
+<section class="wrap rule-top">
+  <div class="slab">
+    <span class="eyebrow" style="color:#8A72DE">In development</span>
+    <h2 style="max-width:20ch">Extending the same approach to other layers of regulation</h2>
+    <p style="max-width:58ch">Two further models are in the lab's GitHub organisation and not yet documented here: <strong style="color:#F6F5F8">Methylformer</strong>, applying the transformer approach to DNA methylation, and <strong style="color:#F6F5F8">APAformer</strong>, extending it to alternative polyadenylation. The <strong style="color:#F6F5F8">PD_DNAm_analysis</strong> repository holds the analysis code for the Parkinson's methylation clock study.</p>
+    <div class="btn-row">
+      <a class="btn btn-ghost" href="https://github.com/TJ-zhanglab" rel="noopener" style="color:#F6F5F8;border-color:rgba(255,255,255,.4)">TJ-zhanglab on GitHub</a>
+    </div>
+  </div>
+  <p class="muted" style="margin-top:1.5rem; font-size:0.92rem">Add a section here for each as it is published — same shape as the three above: what it does, how to install it, how to read the output.</p>
+</section>
+
+</main>
+
+<footer class="foot">
+  <div class="wrap">
+    <div class="foot-grid">
+      <div>
+        <h4>Zhang Lab</h4>
+        <p>Brain Disorders &amp; Genomics<br>Clinical Research Center for Brain and Spinal Cord<br>Tongji University School of Medicine</p>
+      </div>
+      <div>
+        <h4>Find us</h4>
+        <p>1239 Siping Road<br>Yangpu District, Shanghai 200092<br>China</p>
+        <p><a href="mailto:mingzhang@tongji.edu.cn">mingzhang@tongji.edu.cn</a></p>
+      </div>
+      <div>
+        <h4>Elsewhere</h4>
+        <ul>
+          <li><a href="https://github.com/TJ-zhanglab" rel="noopener">GitHub — TJ-zhanglab</a></li>
+          <li><a href="https://www.aibraingenomics.com/" rel="noopener">aibraingenomics.com</a></li>
+          <li><a href="https://medgroup.tongji.edu.cn/Group.aspx?id=56" rel="noopener">Department page</a></li>
+          <li><a href="https://www.tongji.edu.cn/" rel="noopener">Tongji University</a></li>
+        </ul>
+      </div>
+    </div>
+    <p class="colophon">Pilot site — content drawn from the departmental lab page. Figures drawn for this site; no stock imagery.</p>
+  </div>
+</footer>
+
+<script src="assets/site.js"></script>
+</body>
+</html>
